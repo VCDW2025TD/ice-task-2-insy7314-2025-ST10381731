@@ -1,76 +1,16 @@
-1. What is JWT?
+A JSON Web Token (JWT), pronounced 'jot', is a compact, self-contained method for securely transmitting information between parties as a JSON object. This information can be verified and trusted because it is digitally signed. A JWT consists of three parts separated by dots: a header, a payload, and a signature.
 
-JWT (JSON Web Token) is an open standard (RFC 7519) used to securely transmit information between two parties as a JSON object.
+JWTs are essential for modern web applications, particularly for enabling stateless authentication. After a user successfully logs in, the server issues a JWT. The client application then stores this token and sends it back with every subsequent request for protected resources. As the token contains all necessary user information and is verified by its signature, the server does not need to maintain a session record in its database. This simplifies the architecture and improves scalability.
 
-A JWT consists of three parts:
-header.payload.signature
+The most common implementation of JWTs in a web application follows this flow:
+1. A user authenticates with their credentials.
+2. If the credentials are valid, the server generates a JWT and sends it back to the client.
+3. The client application stores the JWT.
+4. On all subsequent requests to protected API endpoints, the client includes the JWT in the Authorization HTTP header using the Bearer scheme.
 
-Header: Specifies the algorithm used (e.g., HS256).
+The header looks like this:
+Authorisation: Bearer <jwt>
 
-Payload: Contains claims (data such as user_id, role, exp).
+The server-side application then uses middleware to check for this header, extract the token, and validate its signature before processing the request.
 
-Signature: Ensures integrity — verifies that the token hasn’t been tampered with.
-
-Example JWT (simplified):
-
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
-.eyJpZCI6IjEyMyIsImV4cCI6MTY5MjI5OTk5OX0
-.aSxQf8oMv8Xr9iUv7PB7GfY3S2y8gQ
-
-2. Why is JWT Essential for Secure Web Applications?
-
-JWT is widely used for authentication and authorization in modern web apps because:
-
-Stateless Authentication: The server doesn’t need to store session data — it trusts the token itself.
- Integrity: Tokens are signed (and sometimes encrypted) so they can’t be easily forged.
- Scalable: Good for microservices and APIs since tokens work across multiple servers. Customizable: Can include roles, permissions, and expiration times in the payload.
-Reduces Server Load: No session lookup in a database for every request.
-
-3. How Does JWT Work with HTTP Headers?
-
-JWTs are typically sent in the HTTP Authorization header as a Bearer token:
-
-Client request:
-
-GET /api/user/profile HTTP/1.1
-Host: example.com
-Authorization: Bearer <your_jwt_token_here>
-
-
-Flow:
-
-User logs in: Server verifies credentials and creates a JWT with user info and expiration time.
-
-Server sends JWT: Client stores it (usually in localStorage, sessionStorage, or cookies).
-
-Subsequent requests: Client attaches JWT in the Authorization header.
-
-Server validates JWT: Checks signature, expiry, and claims.
-
-If valid: Grants access. If not, returns 401 Unauthorized.
-
-This ensures secure, stateless user sessions.
-
-4. Real-World Example of JWT Misuse
-
-Incident: Cross-Tenant Account Takeover in a SaaS Platform (2023)
-
-Researchers found that a SaaS provider issued JWTs without including a tenant identifier (like tenant_id).
-
-Attackers could take a valid JWT from one tenant and reuse it on another tenant by modifying request headers.
-
-This allowed them to log in as users (or even admins) in other organizations — leading to cross-tenant data exposure.
-
-Root Cause:
-
-Missing tenant binding inside JWT claims.
-
-Trusting client-controlled headers to decide which tenant a request belonged to.
-
-Fix:
-
-Added tenant_id as a claim inside the JWT and verified it on every request.
-
-Removed reliance on client-supplied headers for security decisions.
-
-Added proper email verification and stricter token validation.
+In 2015, security researchers, notably Tim McLean from Auth0, discovered and publicised that numerous popular JWT libraries across different programming languages were vulnerable to the "algorithm confusion" attack and another flaw involving the alg: "none" algorithm. The impact was enormous because these libraries are foundational building blocks for countless web applications and APIs. Any developer who used one of these libraries with an asymmetric key algorithm (like RS256) and didn't have specific countermeasures in place was likely vulnerable.
